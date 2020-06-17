@@ -57,5 +57,4 @@ public abstract class Cosas {
 	
 	public abstract void spawn();
 	
-	
 }

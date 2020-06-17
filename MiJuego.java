@@ -30,7 +30,6 @@ public class MiJuego extends JFrame {
 
 	private JPanel contentPane;
 	Link player;
-	private int dif;
 	private int mov, salIt, salEn;
 	private int hiddenBox = 100;
 	private boolean dibujaGhost = false, win;

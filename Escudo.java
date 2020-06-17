@@ -10,7 +10,6 @@ public class Escudo extends Cosas {
 		this.setIcono("src/juego/imagenes/Escudo.png");
 	}
 	
-	
 	public void recoger(Link l, Escudo e) {
 		if(l.getEscudo() >= 0 && l.getEscudo() < 100) {
 			l.setEscudo(l.getEscudo() + e.cantIt);
