@@ -1,11 +1,10 @@
 package juego;
 
-import java.awt.Graphics;
-import javax.swing.ImageIcon;
 import javax.swing.*;
 
-public class Cosas {
+public abstract class Cosas {
 	
+	protected int cantIt;
 	protected int x, y;
 	protected JPanel MiJP;
 	private String icono;
@@ -14,6 +13,14 @@ public class Cosas {
 		this.MiJP=MiJ;
 		this.x = x;
 		this.y = y;
+	}
+	
+	public int getCantIt() {
+		return this.cantIt;
+	}
+	
+	public void setCantIt(int cantIt) {
+		this.cantIt = cantIt;
 	}
 
 	public int getX() {
@@ -40,7 +47,7 @@ public class Cosas {
 		this.icono = icono;
 	}
 	
-	public JPanel getMiJP() {
+	public JPanel getPanel() {
 		return this.MiJP;
 	}
 	
@@ -48,9 +55,7 @@ public class Cosas {
 		this.MiJP = MiJ;
 	}
 	
-	public void spawn() {
-		this.x = ((int) (Math.random() * 550));
-		this.y = ((int) (Math.random() * 480));
-		this.setIcono("");
-	}
+	public abstract void spawn();
+	
+	
 }

@@ -9,9 +9,12 @@ import javax.swing.border.EmptyBorder;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.IOException;
 
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
@@ -29,10 +32,42 @@ public class MiJuego extends JFrame {
 	Link player;
 	private int dif;
 	private int mov, salIt, salEn;
-	private int card;
-	private boolean dibujaGhost = false;
+	private int hiddenBox = 100;
+	private boolean dibujaGhost = false, win;
+	JLabel lblSalud, lblEscudo, lblArma;
+	Timer reloj2;
+	
+	public void colisionesEn(Personaje enemigo) {
+		if((player.CoordX() >= enemigo.CoordX()-hiddenBox && player.CoordX() <= enemigo.CoordX()+hiddenBox) && (player.CoordY() >= enemigo.CoordY()-hiddenBox && player.CoordY() <= enemigo.CoordY()+hiddenBox)) {
+			if(player.getArma()>0) {
+				enemigo.setSalud(enemigo.getSalud()-10);
+				player.setArma(player.getArma()-1);
+				lblArma.setText("Arma: " + player.getArma());
+				
+			} else {
+				if(player.getEscudo() <= 0) {
+					player.setSalud(player.getSalud()-1);
+					lblSalud.setText("Salud: " + player.getSalud());
+				} else {
+					player.setEscudo(player.getEscudo()-1);
+					lblEscudo.setText("Escudo: " + player.getEscudo());
+				}
+			}
+			if(enemigo.getSalud() <= 0) {
+				enemigo.setCoordX(-200);
+				enemigo.setCoordY(-200);
+			}
+		}
+	}
+	
+	public boolean colisionesIt(Cosas cosa) {
+		if((player.CoordX() >= cosa.getX()-hiddenBox && player.CoordX() <= cosa.getX()+hiddenBox) && (player.CoordY() >= cosa.getY()-hiddenBox && player.CoordY() <= cosa.getY()+hiddenBox)) {
+			return true;
+		}
+		return false;
+	}
 
-	public MiJuego(int d) {
+	public MiJuego(int d, Clip sonido) {
 		
 		if (d == 0) {
 			mov = 100;
@@ -59,18 +94,26 @@ public class MiJuego extends JFrame {
 		JPanel panel_1 = new JPanel();
 		contentPane.add(panel_1, BorderLayout.EAST);
 		
-		player = new Link(panel, 100, 0, 10);
+		player = new Link(panel, 100, 0, 0);
 		Broncas broncas = new Broncas(panel, 80, 130, salEn);
-		Topo topo = new Topo(panel, 100, 26, salEn);
+		broncas.spawn();
+		Topo topo = new Topo(panel, 100, 200, salEn);
+		topo.spawn();
 		Ghost ghost = new Ghost(panel, salEn);
+		Escudo esc = new Escudo(panel, 0, 0, salIt);
+		esc.spawn();
+		Corazon cor = new Corazon(panel, 0, 0, salIt);
+		cor.spawn();
+		Arma arm = new Arma(panel, 0, 0, salIt);
+		arm.spawn();
 		
-		JLabel lblSalud = new JLabel("Salud: " + player.getSalud());
+		lblSalud = new JLabel("Salud: " + player.getSalud());
 		lblSalud.setHorizontalAlignment(SwingConstants.RIGHT);
 		
-		JLabel lblEscudo = new JLabel("Escudo: " + player.getEscudo());
+		lblEscudo = new JLabel("Escudo: " + player.getEscudo());
 		lblEscudo.setHorizontalAlignment(SwingConstants.RIGHT);
 		
-		JLabel lblArma = new JLabel("Arma: " + player.getArma());
+		lblArma = new JLabel("Arma: " + player.getArma());
 		lblArma.setHorizontalAlignment(SwingConstants.RIGHT);
 		GroupLayout gl_panel_1 = new GroupLayout(panel_1);
 		gl_panel_1.setHorizontalGroup(
@@ -110,37 +153,28 @@ public class MiJuego extends JFrame {
 					if(player.CoordX()>0) {
 						player.setCoordX(player.CoordX()-10);
 						player.setDireccion("src/juego/imagenes/izquierda.png");
-						card = 1;
 					}
 					break;
 				case KeyEvent.VK_RIGHT:
 					if(player.CoordX()<(panel.getWidth()-100)) {
 						player.setCoordX(player.CoordX()+10);
 						player.setDireccion("src/juego/imagenes/derecha.png");
-						card = 2;
 					}
 					break;
 				case KeyEvent.VK_UP:
 					if(player.CoordY()>0) {
 						player.setCoordY(player.CoordY()-10);
 						player.setDireccion("src/juego/imagenes/Arriba.png");
-						card = 3;
+
 					}
 					break;
 				case KeyEvent.VK_DOWN:
 					if(player.CoordY()<(panel.getWidth()-200)) {
 						player.setCoordY(player.CoordY()+10);
 						player.setDireccion("src/juego/imagenes/Abajo.png");
-						card = 4;
+
 					}
 					break;
-				case KeyEvent.VK_B:
-					if(player.getArma()> 0) {
-						player.setArma(player.getArma()-1);
-						lblArma.setText("Arma: " + String.valueOf(player.getArma()));
-						Disparo d = new Disparo(panel, player.CoordX(), player.CoordY());
-						d.movimientoDisparo(card);
-					} break;
 				} 
 			}
 		});
@@ -161,13 +195,16 @@ public class MiJuego extends JFrame {
 		
 		reloj.start();
 		
-		Timer reloj2 = new Timer(mov, new ActionListener() {
+		reloj2 = new Timer(mov, new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				topo.getPanel().update(panel.getGraphics());
 				broncas.getPanel().update(panel.getGraphics());
 				player.getPanel().update(panel.getGraphics());
+				esc.getPanel().update(panel.getGraphics());
+				cor.getPanel().update(panel.getGraphics());
+				arm.getPanel().update(panel.getGraphics());
 				
 				if(dibujaGhost) {
 					ghost.getPanel().update(panel.getGraphics());
@@ -189,10 +226,63 @@ public class MiJuego extends JFrame {
 				ImageIcon ImagenTopo = new ImageIcon(topo.getDireccion());
 				panel.getGraphics().drawImage(ImagenTopo.getImage(), topo.CoordX(), topo.CoordY(), panel);
 				
+				ImageIcon ImagenEsc = new ImageIcon(esc.getIcono());
+				panel.getGraphics().drawImage(ImagenEsc.getImage(), esc.getX(), esc.getY(), panel);
+				
+				ImageIcon ImagenArm = new ImageIcon(arm.getIcono());
+				panel.getGraphics().drawImage(ImagenArm.getImage(), arm.getX(), arm.getY(), panel);
+				
+				ImageIcon ImagenCor = new ImageIcon(cor.getIcono());
+				panel.getGraphics().drawImage(ImagenCor.getImage(), cor.getX(), cor.getY(), panel);
+				
 				panel.getGraphics().drawImage(null, 10, 80, null);
+				
+				if(colisionesIt(esc)) {
+					esc.recoger(player, esc);
+					lblEscudo.setText("Escudo: " + player.getEscudo());
+				} 
+				if(colisionesIt(cor)) {
+					cor.recoger(player, cor);
+					lblSalud.setText("Salud: " + player.getSalud());
+				}
+				if(colisionesIt(arm)) {
+					arm.recoger(player, arm);
+					lblArma.setText("Arma: " + player.getArma());
+				}
+				colisionesEn(broncas);
+				colisionesEn(topo);
+				
+				if(dibujaGhost == true) {
+					colisionesEn(ghost);
+				}
+				
+				if(player.getSalud() <= 0) {
+					win = false;
+					reloj.stop();
+					reloj2.stop();
+					sonido.stop();
+					PantallaOver po = new PantallaOver(win);
+					po.setVisible(true);
+					po.setLocationRelativeTo(null);
+					dispose();
+
+				}
+		
+				if(broncas.getSalud() <= 0 && topo.getSalud() <= 0 && ghost.getSalud() <= 0) {
+					win = true;
+					reloj.stop();
+					reloj2.stop();
+					sonido.stop();
+					PantallaOver po = new PantallaOver(win);
+					po.setVisible(true);
+					po.setLocationRelativeTo(null);
+					dispose();
+
+				}
 			}
 		});	
 		
-		reloj2.start();
-	}
+		reloj2.start();	
+		
+	}	
 }

@@ -39,6 +39,7 @@ public class Principal extends JFrame implements ChangeListener{
 	private int difi;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	private JRadioButton rdbtnNewRadioButton, rdbtnNewRadioButton_1;
+	private Clip sonido;
 	/**
 	 * Launch the application.
 	 */
@@ -81,15 +82,14 @@ public class Principal extends JFrame implements ChangeListener{
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
 				try {
-					MiJuego frame = new MiJuego(difi);
+					
+					sonido = AudioSystem.getClip();
+					sonido.open(AudioSystem.getAudioInputStream(new File("src/juego/imagenes/ringtones-tema-zelda.wav")));				
+					sonido.start();
+					MiJuego frame = new MiJuego(difi, sonido);
 					frame.setVisible(true);
 					frame.setLocationRelativeTo(null);
 					dispose();
-					
-					Clip sonido = AudioSystem.getClip();
-					sonido.open(AudioSystem.getAudioInputStream(new File("src/juego/imagenes/ringtones-tema-zelda.wav")));				
-					sonido.start();
-					
 					
 				} catch (Exception e) {
 					e.printStackTrace();

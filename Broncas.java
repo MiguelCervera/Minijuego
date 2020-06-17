@@ -35,4 +35,9 @@ public class Broncas extends Personaje{
 			this.setDireccion("src/juego/imagenes/Broncas_Izquierda.png");
 		}
 	}
+	
+	public void spawn() {
+		this.x = ((int) (Math.random() * 550));
+		this.y = ((int) (Math.random() * 480));
+	}
 }
